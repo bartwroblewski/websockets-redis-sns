@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+    <html>
+        <body>
+            <button id="mybutton">Send no react</button>
+            <script>
+
+                const socket = new WebSocket("ws://localhost:8887");
+
+
+             
+
+                    // Connection opened
+                    socket.addEventListener("open", (event) => {
+                        socket.send("Hello Server!");
+                    });
+
+                    // Listen for messages
+                    socket.addEventListener("message", (event) => {
+                        const notification = "Message from server " + event.data
+                        console.log(notification)
+                    });
+
+                    const button = document.getElementById('mybutton')
+                    button.addEventListener('click', e => socket.send('no react button'))
+
+            </script>
+    </html>

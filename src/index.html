@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+    <html>
+        <body>
+            <head>
+                <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+                <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+                <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+                <style>
+                </style>
+            </head>
+            <body>
+                <div id="root">
+            </body>
+            <script type="text/babel">
+
+                const SocketContext = React.createContext({message: '', send: () => {}})
+                const useSocket = () => React.useContext(SocketContext)
+
+                const SocketProvider = ({children}) => {
+                    const ws = React.useRef(null)
+                    if (ws.current === null) {
+                        ws.current = new WebSocket("ws://localhost:8887");
+                    }
+
+                    const [message, setMessage] = React.useState()
+
+                    ws.current.onopen = (event) => {
+                        ws.current.send("Hello Server!");
+                    }
+
+                    ws.current.onmessage = (event) => {
+                        setMessage("Message from server " + event.data)
+                    }
+
+                
+
+                    return (
+                        <SocketContext.Provider value={{
+                            message,
+                            send: ws.current.send.bind(ws.current)
+                        }}>
+                            {children}
+                        </SocketContext.Provider>
+                    )
+                }
+
+
+                const NotificationsContext = React.createContext([])
+
+                const useNotifications = () => React.useContext(NotificationsContext)
+
+                const NotificationsProvider = ({children}) => {
+
+                    const socket = useSocket()
+                    const [notifications, setNotifications] = React.useState([])
+
+                    React.useEffect(() => {
+                        socket.message && setNotifications([...notifications, socket.message])
+                    }, [socket.message])
+
+                    return (
+                        <NotificationsContext.Provider value={notifications}>
+                            {children}
+                        </NotificationsContext.Provider>
+                    )
+                }
+
+                const Notifications = () => {
+
+                    const notifications = useNotifications()
+
+                    React.useEffect(() => {
+                        console.log(notifications)
+                    }, [notifications])
+
+                    return (
+                        <div style={{border: '1px solid black'}}>
+                            Notifications
+                            <ul>
+                                {notifications.map((n, i) => <li key={i} >{n}</li>)}
+                            </ul>
+                        </div>
+                    )
+                }
+
+                const App = () => {
+                    const socket = useSocket()
+                    return (
+                        <div>
+                            <Notifications/>
+                            <button onClick={() => socket.send('button clicked')}>Send</button>
+                            
+                        </div>
+                    )
+
+                }
+
+                const withNotfications = (comp) => (
+                    <SocketProvider>
+                        <NotificationsProvider>
+                            {comp}
+                        </NotificationsProvider>
+                    </SocketProvider>
+                )
+
+                ReactDOM.render(withNotfications(<App/>), document.getElementById('root'))
+            </script>
+    </html>

@@ -5,8 +5,12 @@ services:
       dockerfile: Dockerfile.websockets
     ports:
       - "8887:8887"
+      - "8889:8889"
+      - "3000:3000"
     depends_on:
       - redis
+    volumes:
+      - ./src:/app/src
 
   redis:
     image: redis
